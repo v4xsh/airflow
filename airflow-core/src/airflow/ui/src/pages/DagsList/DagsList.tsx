@@ -132,18 +132,14 @@ const createColumns = (
   },
   {
     accessorKey: "tags",
-    cell: ({
-      row: {
-        original: { tags },
-      },
-    }) => <DagTags hideIcon tags={tags} />,
+    cell: ({ row: { original } }) => <DagTags hideIcon tags={original.tags} />,
     enableSorting: false,
     header: () => translate("dagDetails.tags"),
   },
   {
     accessorKey: "pending_actions",
-    cell: ({ row: { original: dag } }) => (
-      <NeedsReviewBadge dagId={dag.dag_id} pendingActions={dag.pending_actions} />
+    cell: ({ row: { original } }) => (
+      <NeedsReviewBadge dagId={original.dag_id} pendingActions={original.pending_actions} />
     ),
     enableSorting: false,
     header: "",
@@ -206,8 +202,8 @@ export const DagsList = () => {
   const [display, setDisplay] = useLocalStorage<"card" | "table">(DAGS_LIST_DISPLAY, "card");
   const dagRunsLimit = display === "card" ? 14 : 1;
 
-  const hidePausedDagsByDefault = Boolean(useConfig("hide_paused_dags_by_default"));
-  const defaultShowPaused = hidePausedDagsByDefault ? false : undefined;
+  const configValue = useConfig("hide_paused_dags_by_default");
+  const hidePausedDagsByDefault = configValue === true || configValue === "true";
 
   const showPaused = searchParams.get(PAUSED);
   const showFavorites = searchParams.get(FAVORITE);
@@ -219,10 +215,9 @@ export const DagsList = () => {
   const owners = searchParams.getAll(OWNERS);
 
   const { setTableURLState, tableURLState } = useTableURLState();
-
   const { pagination, sorting } = tableURLState;
-  const dagDisplayNamePattern = searchParams.get(NAME_PATTERN) ?? "";
 
+  const dagDisplayNamePattern = searchParams.get(NAME_PATTERN) ?? "";
   const [sort] = sorting;
   const orderBy = sort ? `${sort.desc ? "-" : ""}${sort.id}` : "dag_display_name";
 
@@ -233,6 +228,7 @@ export const DagsList = () => {
       pagination: { ...pagination, pageIndex: 0 },
       sorting,
     });
+
     if (value) {
       searchParams.set(NAME_PATTERN, value);
     } else {
@@ -242,17 +238,20 @@ export const DagsList = () => {
     setSearchParams(searchParams);
   };
 
-  let paused = defaultShowPaused;
-  let isFavorite = undefined;
-  let pendingHitl = undefined;
+  let paused: boolean | undefined;
 
-  if (showPaused === "all") {
-    paused = undefined;
-  } else if (showPaused === "true") {
+  if (showPaused === "true") {
     paused = true;
   } else if (showPaused === "false") {
     paused = false;
+  } else if (showPaused === null && hidePausedDagsByDefault) {
+    paused = false;
+  } else {
+    paused = undefined;
   }
+
+  let isFavorite;
+  let pendingHitl;
 
   if (showFavorites === "true") {
     isFavorite = true;
@@ -267,7 +266,7 @@ export const DagsList = () => {
   }
 
   const { data, error, isLoading } = useDags({
-    dagDisplayNamePattern: Boolean(dagDisplayNamePattern) ? dagDisplayNamePattern : undefined,
+    dagDisplayNamePattern: dagDisplayNamePattern || undefined,
     dagRunsLimit,
     isFavorite,
     lastDagRunState,

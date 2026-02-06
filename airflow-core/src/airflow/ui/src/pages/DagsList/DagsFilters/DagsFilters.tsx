@@ -54,8 +54,14 @@ const toStateValue = (value: string | null): StateValue =>
 const toBooleanFilterValue = (
   value: string | null,
   defaultValue: BooleanFilterValue = "all",
-): BooleanFilterValue =>
-  booleanFilterValues.includes(value as BooleanFilterValue) ? (value as BooleanFilterValue) : defaultValue;
+): BooleanFilterValue => {
+  if (value === "true" || value === "false" || value === "all") {
+    return value;
+  }
+  return defaultValue;
+};
+
+
 
 export const DagsFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -75,7 +81,9 @@ export const DagsFilters = () => {
     tagNamePattern: pattern,
   });
 
-  const hidePausedDagsByDefault = Boolean(useConfig("hide_paused_dags_by_default"));
+const configValue = useConfig("hide_paused_dags_by_default");
+const hidePausedDagsByDefault = configValue === true || configValue === "true";
+
   const defaultShowPaused: BooleanFilterValue = hidePausedDagsByDefault ? "false" : "all";
 
   const { setTableURLState, tableURLState } = useTableURLState();
