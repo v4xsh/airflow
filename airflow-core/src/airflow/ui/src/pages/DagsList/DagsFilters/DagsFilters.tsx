@@ -66,19 +66,21 @@ export const DagsFilters = () => {
     tagNamePattern: pattern,
   });
 
-  const hidePausedDagsByDefault = Boolean(useConfig("hide_paused_dags_by_default"));
-  const defaultShowPaused = hidePausedDagsByDefault ? "false" : "all";
+  const configValue = useConfig("hide_paused_dags_by_default");
+  const hidePausedDagsByDefault = configValue === true || configValue === "true";
+  const defaultShowPaused = hidePausedDagsByDefault ? "false" : "show_all";
 
   const { setTableURLState, tableURLState } = useTableURLState();
   const { pagination, sorting } = tableURLState;
 
   const handlePausedChange: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     ({ currentTarget: { value } }) => {
-      if (value === "all") {
-        searchParams.delete(PAUSED_PARAM);
+      if (value === "show_all") {
+        searchParams.set(PAUSED_PARAM, "show_all");
       } else {
         searchParams.set(PAUSED_PARAM, value);
       }
+
       setTableURLState({
         pagination: { ...pagination, pageIndex: 0 },
         sorting,

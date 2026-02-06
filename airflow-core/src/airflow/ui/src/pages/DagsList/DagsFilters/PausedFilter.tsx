@@ -33,11 +33,11 @@ export const PausedFilter = ({ defaultShowPaused, onPausedChange, showPaused }: 
   return (
     <ButtonGroup attached size="sm" variant="outline">
       <Button
-        bg={currentValue === "all" ? "colorPalette.muted" : undefined}
+        bg={currentValue === "show_all" || currentValue === "all" ? "colorPalette.muted" : undefined}
         colorPalette="brand"
         onClick={onPausedChange}
-        value="all"
-        variant={currentValue === "all" ? "solid" : "outline"}
+        value="show_all"
+        variant={currentValue === "show_all" || currentValue === "all" ? "solid" : "outline"}
       >
         {translate("filters.paused.all")}
       </Button>
